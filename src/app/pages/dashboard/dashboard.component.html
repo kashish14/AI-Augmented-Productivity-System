@@ -1,0 +1,71 @@
+<div class="dashboard">
+  <h1 class="dashboard__title">Dashboard</h1>
+  <p class="dashboard__intro">
+    Your state-aware productivity overview. Energy, alignment, and AI suggestions in one place.
+  </p>
+
+  <section class="dashboard__summary cards">
+    <div class="card card--energy">
+      <h3>Today's energy</h3>
+      <p class="card__value" [class]="'energy--' + (energyToday || 'unknown')">
+        {{ energyToday || 'Not logged' }}
+      </p>
+    </div>
+    <div class="card">
+      <h3>Pending tasks</h3>
+      <p class="card__value">{{ pendingCount }}</p>
+    </div>
+    <div class="card">
+      <h3>Cognitive load</h3>
+      <p class="card__value">{{ fatigueScore }}%</p>
+    </div>
+  </section>
+
+  <section class="dashboard__insights card" *ngIf="fatigueInsights.length">
+    <h2>Decision fatigue insights</h2>
+    <p class="card__sub">Pattern-based insights from your decision and task data</p>
+    <ul class="insights-list">
+      <li *ngFor="let insight of fatigueInsights" class="insight-item">{{ insight }}</li>
+    </ul>
+  </section>
+
+  <div class="dashboard__grid">
+    <section class="dashboard__alignment card">
+      <h2>Daily alignment</h2>
+      <p class="card__sub">Energy vs. task completion over the last 7 days</p>
+      <div class="chart-wrap" *ngIf="alignmentChartData.labels?.length">
+        <canvas baseChart
+          [data]="alignmentChartData"
+          [options]="alignmentChartOptions"
+          type="bar">
+        </canvas>
+      </div>
+      <div *ngIf="!alignmentChartData.labels?.length" class="chart-placeholder">
+        No alignment data yet. Log energy and complete tasks to see trends.
+      </div>
+    </section>
+
+    <section class="dashboard__suggestions card">
+      <h2>AI suggestions</h2>
+      <p class="card__sub">Explainable recommendations based on energy and fatigue</p>
+      <div class="suggestions-list" *ngIf="suggestions$ | async as suggestions">
+        <div *ngIf="!suggestions.length" class="empty-state">
+          No active suggestions. Your current state looks balanced.
+        </div>
+        <article *ngFor="let s of suggestions" class="suggestion">
+          <h4 class="suggestion__title">{{ s.title }}</h4>
+          <p class="suggestion__desc">{{ s.description }}</p>
+          <details class="suggestion__reasoning">
+            <summary>Why this suggestion</summary>
+            <ul>
+              <li *ngFor="let r of s.reasoning">{{ r }}</li>
+            </ul>
+          </details>
+          <button type="button" class="btn btn--ghost" (click)="dismissSuggestion(s.id)">
+            Dismiss
+          </button>
+        </article>
+      </div>
+    </section>
+  </div>
+</div>
