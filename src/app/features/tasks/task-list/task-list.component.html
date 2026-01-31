@@ -1,0 +1,83 @@
+<div class="task-list">
+  <h1 class="page-title">Tasks</h1>
+  <p class="page-intro">
+    Create tasks tagged by energy level and cognitive demand. Priority and effort are separate.
+  </p>
+
+  <button type="button" class="btn btn--primary" (click)="openForm()">New task</button>
+
+  <div *ngIf="showForm" class="task-form card">
+    <h3>New task</h3>
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input id="title" type="text" [(ngModel)]="newTask.title" placeholder="What needs to be done?" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Energy level</label>
+        <select [(ngModel)]="newTask.energyLevel">
+          <option *ngFor="let e of energyLevels" [value]="e.value">{{ e.label }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cognitive demand</label>
+        <select [(ngModel)]="newTask.cognitiveDemand">
+          <option *ngFor="let c of cognitiveLevels" [value]="c.value">{{ c.label }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Priority (1–5)</label>
+        <input type="number" min="1" max="5" [(ngModel)]="newTask.priority" />
+      </div>
+      <div class="form-group">
+        <label>Effort (1–5)</label>
+        <input type="number" min="1" max="5" [(ngModel)]="newTask.effort" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn--ghost" (click)="closeForm()">Cancel</button>
+      <button type="button" class="btn btn--primary" (click)="createTask()">Create</button>
+    </div>
+  </div>
+
+  <section class="tasks-section">
+    <h2>Pending ({{ pendingTasks.length }})</h2>
+    <ul class="task-cards">
+      <li *ngFor="let task of pendingTasks" class="task-card card">
+        <div class="task-card__main">
+          <h4 class="task-card__title">{{ task.title }}</h4>
+          <div class="task-card__meta">
+            <span class="badge badge--energy" [attr.data-energy]="task.energyLevel">
+              {{ task.energyLevel }}
+            </span>
+            <span class="badge badge--cognitive" [attr.data-cognitive]="task.cognitiveDemand">
+              {{ task.cognitiveDemand }} demand
+            </span>
+            <span>P{{ task.priority }} / E{{ task.effort }}</span>
+          </div>
+        </div>
+        <div class="task-card__actions">
+          <button type="button" class="btn btn--primary btn--sm" (click)="completeTask(task)">
+            Complete
+          </button>
+          <button type="button" class="btn btn--ghost btn--sm" (click)="deleteTask(task)">
+            Delete
+          </button>
+        </div>
+      </li>
+    </ul>
+    <p *ngIf="!pendingTasks.length" class="empty">No pending tasks.</p>
+  </section>
+
+  <section class="tasks-section" *ngIf="completedTasks.length">
+    <h2>Completed</h2>
+    <ul class="task-cards task-cards--muted">
+      <li *ngFor="let task of completedTasks" class="task-card task-card--done card">
+        <span class="task-card__title">{{ task.title }}</span>
+        <span class="task-card__date">{{ task.completedAt | date:'short' }}</span>
+      </li>
+    </ul>
+  </section>
+</div>

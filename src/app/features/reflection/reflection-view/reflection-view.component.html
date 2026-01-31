@@ -1,0 +1,42 @@
+<div class="reflection-view">
+  <h1 class="page-title">Reflection</h1>
+  <p class="page-intro">
+    End-of-day reflection prompts. Capture patterns and insights over time.
+  </p>
+
+  <section class="card prompt-form">
+    <h3>Reflection prompt</h3>
+    <div class="prompt-tabs">
+      <button
+        *ngFor="let p of prompts"
+        type="button"
+        class="prompt-tab"
+        [class.prompt-tab--active]="selectedPrompt.id === p.id"
+        (click)="selectPrompt(p)">
+        {{ p.category }}
+      </button>
+    </div>
+    <p class="prompt-text">{{ selectedPrompt.text }}</p>
+    <div class="form-group">
+      <label for="response">Your response</label>
+      <textarea id="response" rows="4" [(ngModel)]="response" placeholder="Write a few lines..."></textarea>
+    </div>
+    <button type="button" class="btn btn--primary" (click)="submitReflection()">Save reflection</button>
+  </section>
+
+  <section class="card" *ngIf="todayReflections.length">
+    <h3>Today's reflections</h3>
+    <ul class="reflection-list">
+      <li *ngFor="let r of todayReflections" class="reflection-item">
+        <span class="reflection-prompt-id">{{ r.promptId }}</span>
+        <p class="reflection-response">{{ r.response }}</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h3>Weekly summary</h3>
+    <p class="summary-stats">{{ weeklyReflections.length }} reflections in the last 7 days</p>
+    <p *ngIf="!weeklyReflections.length" class="empty">No reflections this week yet.</p>
+  </section>
+</div>

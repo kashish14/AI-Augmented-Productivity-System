@@ -1,0 +1,37 @@
+<div class="scheduling-view">
+  <h1 class="page-title">Scheduling intelligence</h1>
+  <p class="page-intro">
+    AI-driven suggestions based on your energy, time of day, and decision fatigue. Every suggestion is explainable.
+  </p>
+
+  <section class="context card">
+    <h3>Current context</h3>
+    <ul class="context-list">
+      <li>Energy: <strong>{{ energyToday }}</strong></li>
+      <li>Time of day: <strong>{{ timeOfDay }}</strong></li>
+      <li>Decisions today: <strong>{{ decisionCount }}</strong></li>
+      <li>Task switches: <strong>{{ taskSwitchCount }}</strong></li>
+      <li>Pending tasks: <strong>{{ pendingTasks.length }}</strong></li>
+    </ul>
+    <button type="button" class="btn btn--ghost btn--sm" (click)="refresh()">Refresh suggestions</button>
+  </section>
+
+  <section class="suggestions-section">
+    <h2>Suggestions</h2>
+    <p *ngIf="loading" class="loading">Loading...</p>
+    <div *ngIf="!loading && !suggestions.length" class="empty-state card">
+      No suggestions right now. Your state looks balanced, or add more tasks and energy check-ins.
+    </div>
+    <article *ngFor="let s of suggestions" class="suggestion card">
+      <h4 class="suggestion__title">{{ s.title }}</h4>
+      <p class="suggestion__desc">{{ s.description }}</p>
+      <details class="suggestion__reasoning">
+        <summary>Why this suggestion</summary>
+        <ul>
+          <li *ngFor="let r of s.reasoning">{{ r }}</li>
+        </ul>
+      </details>
+      <button type="button" class="btn btn--ghost btn--sm" (click)="dismiss(s.id)">Dismiss</button>
+    </article>
+  </section>
+</div>
