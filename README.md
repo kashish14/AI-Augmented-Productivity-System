@@ -1,167 +1,130 @@
-# IntentOS — AI-Augmented Productivity System
+# IntentOS
 
-**State-aware productivity. Plan by energy. Schedule with intelligence. Reflect intentionally.**
+An energy-aware productivity app: plan tasks around how you actually feel, get scheduling suggestions that explain themselves, and close the day with a short reflection.
 
-IntentOS is a locally runnable web application that demonstrates future-of-work thinking: it adapts productivity workflows to **human energy**, **cognitive load**, and **reflection** — not just task lists. The product is designed to feel intentional, calm, and intelligent.
+![Angular](https://img.shields.io/badge/Angular-21-dd0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?logo=typescript&logoColor=white)
+![RxJS](https://img.shields.io/badge/RxJS-7-b7178c?logo=reactivex&logoColor=white)
+![Chart.js](https://img.shields.io/badge/Chart.js-4-ff6384?logo=chartdotjs&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 
----
+![Dashboard](docs/screenshots/dashboard.png)
 
-## Philosophy
+| Explainable suggestions | Mobile layout |
+| --- | --- |
+| ![Scheduling view with expanded reasoning](docs/screenshots/scheduling.png) | <img src="docs/screenshots/mobile-tasks.png" alt="Tasks on a phone" width="260"> |
 
-Most productivity tools treat you as a list executor. IntentOS treats you as a **stateful human**:
+## Features
 
-- **Energy-aware** — Tasks are tagged by energy level (low / medium / high) and cognitive demand, so you can match work to how you feel.
-- **Decision-fatigue aware** — The system tracks decisions and task switches, surfaces explainable insights (e.g. *"You make better decisions earlier in the day"*), and suggests when to batch or defer.
-- **Reflection-first** — End-of-day prompts and weekly summaries help you see patterns instead of just checking boxes.
-- **Explainable AI** — Suggestions come with clear reasoning (e.g. *"High decision count today; batching reduces context-switching"*). No black-box AI.
+- **Tasks**: tag each task with the energy it needs and its cognitive demand; priority and effort are tracked separately (1 to 5). Create, complete and delete.
+- **Energy tracking**: log check-ins by time of day, with an optional note. A 14-day trend chart shows your average energy per day.
+- **Scheduling suggestions**: a rule-based engine looks at current energy, time of day, decisions made today, task switches and pending work. Every suggestion carries a "Why this suggestion" list. Dismissed suggestions stay hidden for the rest of the day.
+- **Decision fatigue**: creating and completing tasks counts as a decision; the dashboard turns decisions and task switches into a cognitive load score and short insights.
+- **Reflection**: five end-of-day prompts (energy, focus, decisions, patterns, gratitude), today's entries and a 7-day count.
+- **Dashboard**: today's energy, pending tasks, cognitive load, a 7-day energy-vs-completion chart and active suggestions.
+- **Keyboard navigation**: `D`, `T`, `E`, `S`, `R` jump between views (ignored while typing in a field).
+- Responsive layout: sidebar on desktop, bottom tab bar on phones.
 
-This is **not** a generic todo app. It is a **state-aware productivity system**.
+There is no backend. All data lives in `localStorage`, and the app seeds a week of sample data on first launch so every screen has something to show. Clear site data in the browser to start over.
 
----
+## Tech stack
 
-## Quick start
+| Area | Choice |
+| --- | --- |
+| Framework | Angular 21 (NgModules, lazy-loaded feature routes) |
+| Language | TypeScript 5.9 in strict mode with strict templates |
+| State | RxJS `BehaviorSubject` store persisted to `localStorage` |
+| Charts | Chart.js 4 via ng2-charts |
+| Styling | SCSS with CSS custom properties as design tokens |
+| Tests | Jasmine + Karma (headless Chrome) |
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph UI[Lazy-loaded feature modules]
+    D[Dashboard]
+    T[Tasks]
+    E[Energy]
+    S[Scheduling]
+    R[Reflection]
+  end
+  subgraph Core[Core services]
+    ST[StateService]
+    AI[AiSuggestionService]
+    DF[DecisionFatigueService]
+    AN[AnalyticsService]
+    EB[EventBusService]
+  end
+  LS[(localStorage)]
+
+  T -- create / complete --> DF
+  T & E & R --> ST
+  D --> AN & AI & DF
+  S --> AI
+  AI & AN & DF --> ST
+  ST <--> LS
+  T & E & R -. events .-> EB
+```
+
+- **StateService** is the single source of truth. Each slice (tasks, energy check-ins, decision summaries, suggestions, reflections) is a `BehaviorSubject` mirrored to `localStorage` through `StorageService`.
+- **AiSuggestionService** is a deterministic rule engine, not a model. Each rule emits a title, a description and the `reasoning[]` that triggered it, for example "evening + low energy: defer high-focus work". Each run replaces the active set, so suggestions always reflect the current context.
+- **DecisionFatigueService** counts decisions and task switches per day and derives a 0 to 100 cognitive load score.
+- **AnalyticsService** computes the daily alignment score (energy vs. completion) and the energy trend.
+- **GlobalErrorHandler** and **LoggingService** centralise error reporting and level-based logging.
+
+The "AI" label is deliberate but honest: the suggestion layer is a set of readable rules, built so it could be swapped for a model-backed API without changing the UI contract.
+
+## Getting started
+
+Requirements: Node.js 20.19+, 22.12+ or 24, and npm.
 
 ```bash
-npm install
+git clone https://github.com/kashish14/AI-Augmented-Productivity-System.git
+cd AI-Augmented-Productivity-System
+npm ci
 npm start
 ```
 
-Then open **http://localhost:4200**.  
-If you see peer dependency warnings, the project uses `legacy-peer-deps` (see `.npmrc`); `npm install` should still succeed.
+Open http://localhost:4200.
 
-**Build for production:**
+## Scripts
 
-```bash
-npm run build
-```
+| Command | What it does |
+| --- | --- |
+| `npm start` | Dev server with live reload on port 4200 |
+| `npm run build` | Production build to `dist/intent-os/browser` |
+| `npm run watch` | Development build in watch mode |
+| `npm test` | Karma in watch mode (opens Chrome) |
+| `npm run test:ci` | Single headless test run, as used in CI |
 
-**Run tests:**
+## Project structure
 
-```bash
-npm test
-# or headless: npm run test:ci
-```
-
----
-
-## Architecture overview
-
-- **Stack:** Angular 17, TypeScript, RxJS, SCSS, Chart.js (via ng2-charts), local storage–backed state.
-- **Structure:** Feature-based modules, lazy-loaded routes, shared core services.
-- **Data:** Mock backend with local storage persistence and async simulation via RxJS.
-
-### High-level layout
-
-```
+```text
 src/app/
-├── core/           # Models, services, error handling
-│   ├── models/     # Task, Energy, Reflection, DecisionFatigue, AiSuggestion
-│   ├── services/   # State, AI suggestion, Analytics, Config, EventBus, Storage, Logging, DecisionFatigue
-│   └── error-handler/
-├── shared/         # SharedModule (Common, Router)
-├── layout/         # Shell, Header, Sidebar
-├── pages/          # Dashboard (lazy-loaded)
-└── features/       # Lazy-loaded feature modules
-    ├── tasks/      # Task system (energy/cognitive tags, priority vs effort)
-    ├── energy/     # Energy check-ins, trend chart
-    ├── scheduling/ # AI-driven suggestions (explainable)
-    └── reflection/ # Reflection prompts, weekly summary
+├── core/            # models, services, seed data, date utils, error handler
+├── layout/          # shell, header, sidebar / mobile tab bar
+├── pages/dashboard/ # dashboard (lazy-loaded)
+├── features/        # tasks, energy, scheduling, reflection (each lazy-loaded)
+└── shared/          # SharedModule (CommonModule + RouterModule)
+src/styles.scss      # design tokens and shared primitives (cards, buttons, forms, badges)
 ```
-
-### Core services
-
-| Service | Role |
-|--------|------|
-| **StateService** | Single source of truth; syncs with local storage (tasks, energy, decisions, suggestions, reflections). |
-| **AiSuggestionService** | Mock AI: generates suggestions from energy, time of day, decision count, task switches; every suggestion has a `reasoning[]` explanation. |
-| **DecisionFatigueService** | Records decision and task-switch events, persists daily summaries, exposes cognitive load score and today’s stats. |
-| **AnalyticsService** | Daily alignment (energy vs completion), energy trend; used by dashboard and energy module. |
-| **EventBusService** | RxJS-based event bus for cross-module events (e.g. task_created, energy_checkin). |
-| **ConfigService** | App config (e.g. storage prefix, mock delay, log level). |
-| **StorageService** | Key-value persistence with a configurable prefix. |
-| **LoggingService** | Level-based logging. |
-
----
-
-## AI augmentation strategy (explainable)
-
-The “AI” is a **mock, rule-based layer** focused on **explainability**:
-
-1. **Inputs:** Current energy, time of day, decision count today, pending task count, recent task switches.
-2. **Rules (examples):**
-   - High decision count + multiple pending tasks → suggest *batch similar tasks* (with reasoning).
-   - Evening + low energy → suggest *defer high-focus work* to tomorrow morning.
-   - Many task switches → suggest *short break* and explain the link to cognitive load.
-   - High energy + pending tasks → suggest *schedule deep work now*.
-3. **Output:** List of suggestions, each with `title`, `description`, and `reasoning[]` (why this suggestion).
-
-No neural networks; every suggestion can be traced to simple, human-readable rules. This keeps the system understandable and debuggable.
-
----
-
-## Decision fatigue concept
-
-**Decision fatigue** is the idea that making many decisions depletes mental resources and worsens later choices. IntentOS:
-
-- **Tracks:** Decision events (e.g. creating/completing tasks, changing schedule) and task switches.
-- **Aggregates:** Daily decision count, task-switch count, and a simple cognitive load score.
-- **Surfaces:** Insights such as *"You make better decisions earlier in the day"* or *"High-load tasks after 6 PM increase fatigue"* when thresholds are met.
-- **Uses:** This context in the AI suggestion logic (e.g. suggest batching or breaks when fatigue is high).
-
-All of this is implemented with transparent, rule-based logic.
-
----
-
-## Feature summary
-
-| Feature | Description |
-|--------|-------------|
-| **Task system** | Create tasks; tag by energy level and cognitive demand; separate priority vs effort; complete/delete. |
-| **Energy tracking** | Daily check-ins (time of day + level); today’s check-ins; energy trend chart over last 14 days. |
-| **Scheduling intelligence** | AI suggestions based on energy, time, and fatigue; current context panel; explainable reasoning; dismiss. |
-| **Reflection** | Prompts (energy, focus, decisions, patterns, gratitude); save reflections; today’s list; weekly summary count. |
-| **Dashboard** | Today’s energy, pending tasks, cognitive load; daily alignment chart; decision fatigue insights; AI suggestions panel. |
-
----
-
-## Error handling and observability
-
-- **GlobalErrorHandler** catches unhandled errors and logs them (and can be extended for production reporting).
-- **LoggingService** supports log levels (debug, info, warn, error) and is used across core services.
-- Performance is left to the framework; no custom APM in this baseline.
-
----
 
 ## Testing
 
-- **Unit tests:** Core services (e.g. `AiSuggestionService`, `DecisionFatigueService`) and feature components (e.g. `TaskListComponent`).
-- **AI logic:** Validated via service specs (suggestions return arrays with `reasoning`; decision fatigue updates counts and scores).
+```bash
+npm run test:ci
+```
 
-Run: `npm test` (watch) or `npm run test:ci` (single run, headless).
+The specs cover the suggestion engine (reasoning is present, no duplicates across runs, dismissals respected), decision-fatigue counting, the task list component and the local-date helpers. GitHub Actions runs install, build and tests on every push and pull request.
 
----
+## Roadmap
 
-## Future roadmap (signals for product leadership)
+- Model-backed suggestion API that returns structured reasoning
+- Calendar integration so suggestions can target real free time
+- Weekly pattern insights, such as your most focused hours
+- JSON / CSV export of all local data
 
-- **Real AI backend** — Replace mock rules with a small LLM or recommendation API while keeping explainability (e.g. structured reasoning in the response).
-- **Calendar integration** — Use real availability and time blocks for suggestion timing.
-- **Pattern insights** — Weekly/monthly summaries (e.g. “Your best focus is 9–11 AM”) from historical energy and completion data.
-- **Export and backup** — Export state (JSON/CSV) and optional cloud backup.
-- **Accessibility and i18n** — Full a11y pass and locale support for a global, inclusive product.
+## License
 
----
-
-## Repo and product positioning
-
-This repo is structured to show:
-
-- **Product thinking:** Energy and fatigue as first-class concepts; reflection and explainability over raw automation.
-- **System design:** Clear separation of state, AI logic, analytics, and UI; scalable folder and module layout.
-- **Future-of-work angle:** State-aware productivity and human-centered AI, with a calm, minimal, non-gamified UI.
-
----
-
-## License and credits
-
-IntentOS is a demonstration project. Use and adapt it as you like.  
-Built with Angular, RxJS, Chart.js, and a focus on intentional, explainable productivity.
+[MIT](LICENSE) © 2026 Kashish Agarwal
