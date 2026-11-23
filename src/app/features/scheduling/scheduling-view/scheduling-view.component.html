@@ -5,24 +5,27 @@
   </p>
 
   <section class="context card">
-    <h3>Current context</h3>
-    <ul class="context-list">
-      <li>Energy: <strong>{{ energyToday }}</strong></li>
-      <li>Time of day: <strong>{{ timeOfDay }}</strong></li>
-      <li>Decisions today: <strong>{{ decisionCount }}</strong></li>
-      <li>Task switches: <strong>{{ taskSwitchCount }}</strong></li>
-      <li>Pending tasks: <strong>{{ pendingTasks.length }}</strong></li>
-    </ul>
-    <button type="button" class="btn btn--ghost btn--sm" (click)="refresh()">Refresh suggestions</button>
+    <div class="context__head">
+      <h2>Current context</h2>
+      <button type="button" class="btn btn--ghost btn--sm" [disabled]="loading" (click)="refresh()">Refresh suggestions</button>
+    </div>
+    <dl class="context-list">
+      <div><dt>Energy</dt><dd>{{ energyToday }}</dd></div>
+      <div><dt>Time of day</dt><dd>{{ timeOfDay }}</dd></div>
+      <div><dt>Decisions today</dt><dd>{{ decisionCount }}</dd></div>
+      <div><dt>Task switches</dt><dd>{{ taskSwitchCount }}</dd></div>
+      <div><dt>Pending tasks</dt><dd>{{ pendingTasks.length }}</dd></div>
+    </dl>
   </section>
 
   <section class="suggestions-section">
     <h2>Suggestions</h2>
-    <p *ngIf="loading" class="loading">Loading...</p>
+    <p *ngIf="loading" class="loading" role="status">Analyzing your current context&hellip;</p>
     <div *ngIf="!loading && !suggestions.length" class="empty-state card">
       No suggestions right now. Your state looks balanced, or add more tasks and energy check-ins.
     </div>
-    <article *ngFor="let s of suggestions" class="suggestion card">
+    <div class="suggestions-list" *ngIf="!loading">
+    <article *ngFor="let s of suggestions" class="suggestion">
       <h4 class="suggestion__title">{{ s.title }}</h4>
       <p class="suggestion__desc">{{ s.description }}</p>
       <details class="suggestion__reasoning">
@@ -33,5 +36,6 @@
       </details>
       <button type="button" class="btn btn--ghost btn--sm" (click)="dismiss(s.id)">Dismiss</button>
     </article>
+    </div>
   </section>
 </div>

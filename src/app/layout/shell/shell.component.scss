@@ -5,6 +5,10 @@
 
 .shell__sidebar {
   flex-shrink: 0;
+  width: 232px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 .shell__main {
@@ -16,6 +20,27 @@
 
 .shell__content {
   flex: 1;
-  padding: 1.5rem;
-  overflow: auto;
+  padding: 2rem 1.5rem 3rem;
+}
+
+@media (max-width: 767px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .shell__sidebar {
+    order: 2;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: auto;
+    z-index: 10;
+  }
+
+  .shell__content {
+    padding: 1.25rem 1rem 6rem;
+  }
 }

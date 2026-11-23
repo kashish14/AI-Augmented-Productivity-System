@@ -1,11 +1,26 @@
-<nav class="sidebar">
+<nav class="sidebar" aria-label="Main">
+  <a routerLink="/dashboard" class="sidebar__brand">
+    <span class="sidebar__mark" aria-hidden="true">I</span>
+    <span>
+      <span class="sidebar__name">IntentOS</span>
+      <span class="sidebar__tagline">Energy-aware productivity</span>
+    </span>
+  </a>
   <ul class="sidebar__list">
     <li *ngFor="let item of navItems" class="sidebar__item">
-      <a [routerLink]="item.path" routerLinkActive="sidebar__link--active" class="sidebar__link">
-        <span class="sidebar__icon" [attr.data-icon]="item.icon">{{ item.icon | slice:0:1 }}</span>
+      <a
+        [routerLink]="item.path"
+        routerLinkActive="sidebar__link--active"
+        ariaCurrentWhenActive="page"
+        class="sidebar__link"
+        [attr.aria-keyshortcuts]="item.shortcut">
+        <svg class="sidebar__icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path [attr.d]="item.icon" />
+        </svg>
         <span class="sidebar__label">{{ item.label }}</span>
-        <kbd class="sidebar__shortcut">{{ item.shortcut }}</kbd>
+        <kbd class="sidebar__shortcut">{{ item.shortcut | uppercase }}</kbd>
       </a>
     </li>
   </ul>
+  <p class="sidebar__hint">Press a key to jump between views.</p>
 </nav>

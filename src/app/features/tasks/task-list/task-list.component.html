@@ -1,46 +1,49 @@
 <div class="task-list">
-  <h1 class="page-title">Tasks</h1>
-  <p class="page-intro">
-    Create tasks tagged by energy level and cognitive demand. Priority and effort are separate.
-  </p>
+  <div class="page-head">
+    <div>
+      <h1 class="page-title">Tasks</h1>
+      <p class="page-intro">
+        Tag each task by the energy and focus it needs. Priority and effort are tracked separately.
+      </p>
+    </div>
+    <button *ngIf="!showForm" type="button" class="btn btn--primary" (click)="openForm()">+ New task</button>
+  </div>
 
-  <button type="button" class="btn btn--primary" (click)="openForm()">New task</button>
-
-  <div *ngIf="showForm" class="task-form card">
+  <form *ngIf="showForm" class="task-form card" (ngSubmit)="createTask()">
     <h3>New task</h3>
     <div class="form-group">
       <label for="title">Title</label>
-      <input id="title" type="text" [(ngModel)]="newTask.title" placeholder="What needs to be done?" />
+      <input id="title" name="title" type="text" [(ngModel)]="newTask.title" placeholder="What needs to be done?" autocomplete="off" required />
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Energy level</label>
-        <select [(ngModel)]="newTask.energyLevel">
+        <label for="task-energy">Energy level</label>
+        <select id="task-energy" name="energyLevel" [(ngModel)]="newTask.energyLevel">
           <option *ngFor="let e of energyLevels" [value]="e.value">{{ e.label }}</option>
         </select>
       </div>
       <div class="form-group">
-        <label>Cognitive demand</label>
-        <select [(ngModel)]="newTask.cognitiveDemand">
+        <label for="task-cognitive">Cognitive demand</label>
+        <select id="task-cognitive" name="cognitiveDemand" [(ngModel)]="newTask.cognitiveDemand">
           <option *ngFor="let c of cognitiveLevels" [value]="c.value">{{ c.label }}</option>
         </select>
       </div>
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label>Priority (1–5)</label>
-        <input type="number" min="1" max="5" [(ngModel)]="newTask.priority" />
+        <label for="task-priority">Priority (1–5)</label>
+        <input type="number" min="1" max="5" id="task-priority" name="priority" [(ngModel)]="newTask.priority" />
       </div>
       <div class="form-group">
-        <label>Effort (1–5)</label>
-        <input type="number" min="1" max="5" [(ngModel)]="newTask.effort" />
+        <label for="task-effort">Effort (1–5)</label>
+        <input type="number" min="1" max="5" id="task-effort" name="effort" [(ngModel)]="newTask.effort" />
       </div>
     </div>
     <div class="form-actions">
       <button type="button" class="btn btn--ghost" (click)="closeForm()">Cancel</button>
-      <button type="button" class="btn btn--primary" (click)="createTask()">Create</button>
+      <button type="submit" class="btn btn--primary" [disabled]="!newTask.title.trim()">Create task</button>
     </div>
-  </div>
+  </form>
 
   <section class="tasks-section">
     <h2>Pending ({{ pendingTasks.length }})</h2>
@@ -50,29 +53,29 @@
           <h4 class="task-card__title">{{ task.title }}</h4>
           <div class="task-card__meta">
             <span class="badge badge--energy" [attr.data-energy]="task.energyLevel">
-              {{ task.energyLevel }}
+              {{ task.energyLevel }} energy
             </span>
             <span class="badge badge--cognitive" [attr.data-cognitive]="task.cognitiveDemand">
               {{ task.cognitiveDemand }} demand
             </span>
-            <span>P{{ task.priority }} / E{{ task.effort }}</span>
+            <span title="Priority / effort (1–5)">Priority {{ task.priority }} · Effort {{ task.effort }}</span>
           </div>
         </div>
         <div class="task-card__actions">
-          <button type="button" class="btn btn--primary btn--sm" (click)="completeTask(task)">
+          <button type="button" class="btn btn--primary btn--sm" (click)="completeTask(task)" [attr.aria-label]="'Complete ' + task.title">
             Complete
           </button>
-          <button type="button" class="btn btn--ghost btn--sm" (click)="deleteTask(task)">
+          <button type="button" class="btn btn--ghost btn--sm" (click)="deleteTask(task)" [attr.aria-label]="'Delete ' + task.title">
             Delete
           </button>
         </div>
       </li>
     </ul>
-    <p *ngIf="!pendingTasks.length" class="empty">No pending tasks.</p>
+    <p *ngIf="!pendingTasks.length" class="empty-state card">All clear. Add a task to plan your next block of work.</p>
   </section>
 
   <section class="tasks-section" *ngIf="completedTasks.length">
-    <h2>Completed</h2>
+    <h2>Completed ({{ completedTasks.length }})</h2>
     <ul class="task-cards task-cards--muted">
       <li *ngFor="let task of completedTasks" class="task-card task-card--done card">
         <span class="task-card__title">{{ task.title }}</span>
