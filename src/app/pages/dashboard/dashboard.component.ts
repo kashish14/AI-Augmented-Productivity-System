@@ -1,3 +1,4 @@
+import { formatShortDate, toDateKey } from '../../core/utils/date';
 import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ChartConfiguration } from 'chart.js';
@@ -8,6 +9,7 @@ import { StateService } from '../../core/services/state.service';
 import { DecisionFatigueService } from '../../core/services/decision-fatigue.service';
 
 @Component({
+  standalone: false,
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -28,8 +30,8 @@ export class DashboardComponent implements OnInit {
       legend: { display: false }
     },
     scales: {
-      y: { min: 0, max: 100 },
-      x: {}
+      y: { min: 0, max: 100, ticks: { stepSize: 25 } },
+      x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 8 } }
     }
   };
 
@@ -47,7 +49,7 @@ export class DashboardComponent implements OnInit {
     const tasks = this.state.getTasks();
     this.pendingCount = tasks.filter((t) => !t.completedAt).length;
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     const energy = this.state.getEnergyCheckIns().filter((e) => e.date === today);
     if (energy.length) {
       const avg =
@@ -64,7 +66,7 @@ export class DashboardComponent implements OnInit {
 
     this.alignment$.subscribe((data) => {
       this.alignmentChartData = {
-        labels: data.map((d) => d.date.slice(5)),
+        labels: data.map((d) => formatShortDate(d.date)),
         datasets: [
           {
             label: 'Alignment',
@@ -87,7 +89,7 @@ export class DashboardComponent implements OnInit {
     const tasks = this.state.getTasks();
     const pending = tasks.filter((t) => !t.completedAt).length;
     const summaries = this.state.getDecisionSummaries();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     const todaySummary = summaries.find((s) => s.date === today);
     this.ai
       .getSuggestions({

@@ -1,3 +1,4 @@
+import { toDateKey } from '../utils/date';
 import { Injectable } from '@angular/core';
 import { StateService } from './state.service';
 import { DecisionFatigueSummary } from '../models/decision-fatigue.model';
@@ -16,7 +17,7 @@ export class DecisionFatigueService {
   }
 
   private resetIfNewDay(): void {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     const summaries = this.state.getDecisionSummaries();
     const todaySummary = summaries.find((s) => s.date === today);
     if (todaySummary) {
@@ -29,7 +30,7 @@ export class DecisionFatigueService {
     type: 'task_switch' | 'task_choice' | 'schedule_change' | 'priority_change',
     context?: string
   ): void {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     this.decisionCountToday++;
     if (type === 'task_switch') {
       this.taskSwitchCountToday++;
@@ -57,7 +58,7 @@ export class DecisionFatigueService {
   }
 
   getTodaySummary(): { decisionCount: number; taskSwitchCount: number; cognitiveLoadScore: number } {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     const summary = this.state.getDecisionSummaries().find((s) => s.date === today);
     return {
       decisionCount: summary?.decisionCount ?? this.decisionCountToday,

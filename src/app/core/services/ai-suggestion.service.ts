@@ -1,3 +1,4 @@
+import { toDateKey } from '../utils/date';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, delay } from 'rxjs/operators';
@@ -109,15 +110,17 @@ export class AiSuggestionService {
       });
     }
 
-    const existing = this.state.getSuggestions().filter((s) => !s.dismissedAt);
-    const newOnes = suggestions.slice(0, 3);
-    const merged = [...existing];
-    newOnes.forEach((s) => {
-      if (!merged.some((e) => e.id === s.id)) merged.push(s);
-    });
-    this.state.setSuggestions(merged);
-    this.logging.debug('AI suggestions generated', merged.length);
-    return merged.filter((s) => !s.dismissedAt);
+    // Suggestions reflect the current context, so each run replaces the active set.
+    // Kinds the user dismissed today stay hidden until tomorrow.
+    const today = toDateKey();
+    const dismissedToday = this.state
+      .getSuggestions()
+      .filter((s) => s.dismissedAt && toDateKey(s.dismissedAt) === today);
+    const hiddenTypes = new Set(dismissedToday.map((s) => s.type));
+    const active = suggestions.filter((s) => !hiddenTypes.has(s.type)).slice(0, 3);
+    this.state.setSuggestions([...dismissedToday, ...active]);
+    this.logging.debug('AI suggestions generated', active.length);
+    return active;
   }
 
   dismissSuggestion(id: string): void {

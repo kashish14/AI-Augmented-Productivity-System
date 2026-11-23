@@ -1,3 +1,4 @@
+import { toDateKey } from '../../../core/utils/date';
 import { Component, OnInit } from '@angular/core';
 import { Reflection, ReflectionPrompt } from '../../../core/models/reflection.model';
 import { StateService } from '../../../core/services/state.service';
@@ -12,6 +13,7 @@ const PROMPTS: ReflectionPrompt[] = [
 ];
 
 @Component({
+  standalone: false,
   selector: 'app-reflection-view',
   templateUrl: './reflection-view.component.html',
   styleUrls: ['./reflection-view.component.scss']
@@ -37,18 +39,19 @@ export class ReflectionViewComponent implements OnInit {
     const now = new Date();
     const weekAgo = new Date(now);
     weekAgo.setDate(weekAgo.getDate() - 7);
-    this.weeklyReflections = this.reflections.filter((r) => new Date(r.date) >= weekAgo);
+    const since = toDateKey(weekAgo);
+    this.weeklyReflections = this.reflections.filter((r) => r.date >= since);
   }
 
   get todayReflections(): Reflection[] {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     return this.reflections.filter((r) => r.date === today);
   }
 
   submitReflection(): void {
     if (!this.response.trim()) return;
     const now = new Date().toISOString();
-    const date = now.slice(0, 10);
+    const date = toDateKey();
     const id = `ref_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const reflection: Reflection = {
       id,
@@ -62,6 +65,10 @@ export class ReflectionViewComponent implements OnInit {
     this.eventBus.dispatch({ type: 'reflection_saved', payload: reflection });
     this.response = '';
     this.computeWeekly();
+  }
+
+  promptText(id: string): string {
+    return this.prompts.find((p) => p.id === id)?.text ?? id;
   }
 
   selectPrompt(p: ReflectionPrompt): void {

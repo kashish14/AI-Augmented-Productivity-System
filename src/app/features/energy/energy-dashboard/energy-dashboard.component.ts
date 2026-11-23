@@ -1,3 +1,5 @@
+import { formatShortDate } from '../../../core/utils/date';
+import { toDateKey } from '../../../core/utils/date';
 import { Component, OnInit } from '@angular/core';
 import { ChartConfiguration } from 'chart.js';
 import { EnergyCheckIn, EnergyLevel } from '../../../core/models/energy.model';
@@ -6,20 +8,21 @@ import { AnalyticsService } from '../../../core/services/analytics.service';
 import { EventBusService } from '../../../core/services/event-bus.service';
 
 @Component({
+  standalone: false,
   selector: 'app-energy-dashboard',
   templateUrl: './energy-dashboard.component.html',
   styleUrls: ['./energy-dashboard.component.scss']
 })
 export class EnergyDashboardComponent implements OnInit {
   checkIns: EnergyCheckIn[] = [];
-  energyChartData: ChartConfiguration<'line'>['data'] = { datasets: [], labels: [] };
+  energyChartData: ChartConfiguration<'line', (number | null)[]>['data'] = { datasets: [], labels: [] };
   energyChartOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
     scales: {
-      y: { min: 0, max: 3, ticks: { stepSize: 1, callback: (v) => ['', 'Low', 'Med', 'High'][v as number] } },
-      x: {}
+      y: { min: 1, max: 3, grace: 0, ticks: { stepSize: 1, callback: (v) => ['', 'Low', 'Med', 'High'][v as number] ?? '' } },
+      x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkipPadding: 12 } }
     }
   };
 
@@ -60,7 +63,7 @@ export class EnergyDashboardComponent implements OnInit {
     this.state.energyCheckIns$.subscribe((c) => (this.checkIns = c));
     this.analytics.getEnergyTrend(14).subscribe((trend) => {
       this.energyChartData = {
-        labels: trend.map((t) => t.date.slice(5)),
+        labels: trend.map((t) => formatShortDate(t.date)),
         datasets: [
           {
             label: 'Energy',
@@ -68,7 +71,9 @@ export class EnergyDashboardComponent implements OnInit {
             borderColor: 'rgb(15, 118, 110)',
             backgroundColor: 'rgba(15, 118, 110, 0.1)',
             fill: true,
-            tension: 0.3
+            tension: 0.3,
+            spanGaps: true,
+            pointRadius: 3
           }
         ]
       };
@@ -76,13 +81,13 @@ export class EnergyDashboardComponent implements OnInit {
   }
 
   get todayCheckIns(): EnergyCheckIn[] {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     return this.checkIns.filter((c) => c.date === today);
   }
 
   submitCheckIn(): void {
     const now = new Date().toISOString();
-    const date = now.slice(0, 10);
+    const date = toDateKey();
     const id = `energy_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const checkIn: EnergyCheckIn = {
       id,
@@ -102,7 +107,7 @@ export class EnergyDashboardComponent implements OnInit {
   private refreshChart(): void {
     this.analytics.getEnergyTrend(14).subscribe((trend) => {
       this.energyChartData = {
-        labels: trend.map((t) => t.date.slice(5)),
+        labels: trend.map((t) => formatShortDate(t.date)),
         datasets: [
           {
             label: 'Energy',
@@ -110,7 +115,9 @@ export class EnergyDashboardComponent implements OnInit {
             borderColor: 'rgb(15, 118, 110)',
             backgroundColor: 'rgba(15, 118, 110, 0.1)',
             fill: true,
-            tension: 0.3
+            tension: 0.3,
+            spanGaps: true,
+            pointRadius: 3
           }
         ]
       };

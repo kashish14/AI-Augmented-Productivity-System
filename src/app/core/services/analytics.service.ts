@@ -1,3 +1,4 @@
+import { toDateKey } from '../utils/date';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, delay } from 'rxjs/operators';
@@ -40,7 +41,7 @@ export class AnalyticsService {
     for (let d = 0; d < days; d++) {
       const date = new Date(now);
       date.setDate(date.getDate() - d);
-      const dateStr = date.toISOString().slice(0, 10);
+      const dateStr = toDateKey(date);
 
       const dayEnergy = energy.filter((e) => e.date === dateStr);
       const energyAverage =
@@ -52,8 +53,8 @@ export class AnalyticsService {
           : 2;
 
       const dayTasks = tasks.filter((t) => {
-        const created = t.createdAt?.slice(0, 10) === dateStr;
-        const completed = t.completedAt?.slice(0, 10) === dateStr;
+        const created = !!t.createdAt && toDateKey(t.createdAt) === dateStr;
+        const completed = !!t.completedAt && toDateKey(t.completedAt) === dateStr;
         return created || completed;
       });
       const tasksCompleted = dayTasks.filter((t) => t.completedAt).length;
@@ -80,7 +81,7 @@ export class AnalyticsService {
     return result.reverse();
   }
 
-  getEnergyTrend(days: number = 14): Observable<{ date: string; average: number }[]> {
+  getEnergyTrend(days: number = 14): Observable<{ date: string; average: number | null }[]> {
     return of(this.state.getEnergyCheckIns()).pipe(
       delay(50),
       map((checkIns) => {
@@ -89,7 +90,7 @@ export class AnalyticsService {
         for (let d = 0; d < days; d++) {
           const date = new Date(now);
           date.setDate(date.getDate() - d);
-          byDate.set(date.toISOString().slice(0, 10), []);
+          byDate.set(toDateKey(date), []);
         }
         checkIns.forEach((c) => {
           const n = c.level === 'low' ? 1 : c.level === 'medium' ? 2 : 3;
@@ -99,7 +100,7 @@ export class AnalyticsService {
         return Array.from(byDate.entries())
           .map(([date, values]) => ({
             date,
-            average: values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0
+            average: values.length ? values.reduce((a, b) => a + b, 0) / values.length : null
           }))
           .sort((a, b) => a.date.localeCompare(b.date));
       })

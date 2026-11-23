@@ -5,6 +5,7 @@ import { EventBusService } from '../../../core/services/event-bus.service';
 import { DecisionFatigueService } from '../../../core/services/decision-fatigue.service';
 
 @Component({
+  standalone: false,
   selector: 'app-task-list',
   templateUrl: './task-list.component.html',
   styleUrls: ['./task-list.component.scss']
@@ -71,9 +72,13 @@ export class TaskListComponent implements OnInit {
     if (!this.newTask.title?.trim()) return;
     const now = new Date().toISOString();
     const id = `task_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const clamp = (n: number) => Math.min(5, Math.max(1, Math.round(Number(n) || 3)));
     const task: Task = {
       id,
       ...this.newTask,
+      title: this.newTask.title.trim(),
+      priority: clamp(this.newTask.priority),
+      effort: clamp(this.newTask.effort),
       createdAt: now,
       updatedAt: now
     };

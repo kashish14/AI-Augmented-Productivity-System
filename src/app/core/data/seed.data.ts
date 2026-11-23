@@ -1,3 +1,4 @@
+import { toDateKey } from '../utils/date';
 import { Task } from '../models/task.model';
 import { EnergyCheckIn } from '../models/energy.model';
 import { DecisionFatigueSummary } from '../models/decision-fatigue.model';
@@ -7,7 +8,7 @@ import { AiSuggestion } from '../models/ai-suggestion.model';
 function dateStr(daysAgo: number): string {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
-  return d.toISOString().slice(0, 10);
+  return toDateKey(d);
 }
 
 function iso(daysAgo: number, hour = 9): string {

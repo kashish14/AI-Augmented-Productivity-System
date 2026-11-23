@@ -11,6 +11,7 @@ describe('AiSuggestionService', () => {
   let state: StateService;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         AiSuggestionService,
@@ -60,5 +61,26 @@ describe('AiSuggestionService', () => {
         }
         done();
       });
+  });
+
+  it('should not accumulate duplicates across runs and should respect dismissals', (done) => {
+    const ctx = {
+      currentEnergy: 'high' as const,
+      timeOfDay: 'morning',
+      decisionCountToday: 0,
+      tasksPending: 3,
+      recentTaskSwitches: 0
+    };
+    service.getSuggestions(ctx).subscribe((first) => {
+      expect(first.length).toBeGreaterThan(0);
+      service.dismissSuggestion(first[0].id);
+      service.getSuggestions(ctx).subscribe((second) => {
+        const types = second.map((s) => s.type);
+        expect(new Set(types).size).toBe(types.length);
+        expect(types).not.toContain(first[0].type);
+        expect(second.length).toBe(first.length - 1);
+        done();
+      });
+    });
   });
 });

@@ -1,3 +1,4 @@
+import { toDateKey } from '../../../core/utils/date';
 import { Component, OnInit } from '@angular/core';
 import { AiSuggestion } from '../../../core/models/ai-suggestion.model';
 import { Task } from '../../../core/models/task.model';
@@ -6,6 +7,7 @@ import { StateService } from '../../../core/services/state.service';
 import { DecisionFatigueService } from '../../../core/services/decision-fatigue.service';
 
 @Component({
+  standalone: false,
   selector: 'app-scheduling-view',
   templateUrl: './scheduling-view.component.html',
   styleUrls: ['./scheduling-view.component.scss']
@@ -27,7 +29,7 @@ export class SchedulingViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.pendingTasks = this.state.getTasks().filter((t) => !t.completedAt);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = toDateKey();
     const energy = this.state.getEnergyCheckIns().filter((e) => e.date === today);
     if (energy.length) {
       const avg =
@@ -59,6 +61,7 @@ export class SchedulingViewComponent implements OnInit {
 
   dismiss(id: string): void {
     this.ai.dismissSuggestion(id);
+    this.suggestions = this.suggestions.filter((s) => s.id !== id);
   }
 
   refresh(): void {

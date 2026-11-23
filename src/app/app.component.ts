@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { SeedService } from './core/services/seed.service';
 
 @Component({
+  standalone: false,
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
